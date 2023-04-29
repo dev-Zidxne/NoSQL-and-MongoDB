@@ -13,13 +13,7 @@ class User {
 
   save() {
     const db = getDb();
-    return db
-      .collection("users")
-      .insertOne(this)
-      .then()
-      .catch((err) => {
-        console.log(err);
-      });
+    return db.collection("users").insertOne(this);
   }
 
   addToCart(product) {
@@ -54,7 +48,9 @@ class User {
 
   getCart() {
     const db = getDb();
-    const productIds = this.cart.items.map((item) => item.productId);
+    const productIds = this.cart.items.map((item) => {
+      return item.productId;
+    });
     return db
       .collection("products")
       .find({ _id: { $in: productIds } })
@@ -69,6 +65,19 @@ class User {
           };
         });
       });
+  }
+
+  deleteItemFromCart(productId) {
+    const updatedCartItems = this.cart.items.filter((item) => {
+      return item.productId.toString() !== productId.toString();
+    });
+    const db = getDb();
+    return db
+      .collection("users")
+      .updateOne(
+        { _id: new ObjectId(this._id) },
+        { $set: { cart: { items: updatedCartItems } } }
+      );
   }
 
   static findById(userId) {
